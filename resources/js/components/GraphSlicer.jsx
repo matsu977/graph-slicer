@@ -323,52 +323,67 @@ const InteractiveGraph = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <h3 className="font-bold mb-2">X-Range</h3>
+        <div className="flex gap-8 p-4 justify-start">
+          {/* X-Range: 左寄せ */}
+          <div className="w-48 border p-4 rounded space-y-4">
+            <h3 className="font-bold mb-4">X-Range</h3>
             {xPointers.map((val, i) => (
               <div key={`x-${i}`} className="mb-2">
                 <input
                   type="number"
-                  step="0.1" 
-                  value={val} // 数値そのまま渡す
+                  step="0.1"
+                  value={val}
                   onChange={(e) => {
                     const newXPointers = [...xPointers];
                     newXPointers[i] = parseFloat(e.target.value);
                     setXPointers(newXPointers);
                   }}
-                  className="border p-1 rounded"
+                  className="border p-1 rounded w-full"
                 />
               </div>
             ))}
           </div>
-          <div>
-            <h3 className="font-bold mb-2">Y-Range</h3>
+
+          {/* Y-Range: X-Range の横 */}
+          <div className="w-48 border p-4 rounded space-y-4">
+            <h3 className="font-bold mb-4">Y-Range</h3>
             {yPointers.map((val, i) => (
               <div key={`y-${i}`} className="mb-2">
                 <input
                   type="number"
-                  step="0.001" // 小数点第3位までの入力を許可
-                  value={val} // 数値そのまま渡す
+                  step="0.001"
+                  value={val}
                   onChange={(e) => {
                     const newYPointers = [...yPointers];
                     newYPointers[i] = parseFloat(e.target.value);
                     setYPointers(newYPointers);
                   }}
-                  className="border p-1 rounded"
+                  className="border p-1 rounded w-full"
                 />
               </div>
             ))}
           </div>
+
+          {/* Measurements: Y-Range の右 */}
+          <div className="w-96 border p-4 rounded space-y-4 bg-gradient-to-br from-blue-100 via-white to-blue-50 shadow-lg">
+            <h3 className="font-bold mb-4">Measurements</h3>
+              <div className="flex gap-8 p-4 justify-start">
+                <div className="w-48">
+                  <div>X-Axis Distance: {measurements.xDistance.toFixed(2)}</div>
+                  <div>Y-Axis Distance: {measurements.yDistance.toFixed(3)}</div>
+                </div>
+                <div className="w-48">
+                  <div>Y-Axis Max: {measurements.yMax.toFixed(3)}</div>
+                  <div>Y-Axis Min: {measurements.yMin.toFixed(3)}</div>
+                </div>
+              </div>
+          </div>
         </div>
 
-        <div className="mt-4 p-4 bg-gray-50 rounded">
-          <h3 className="font-bold mb-2">Measurements</h3>
-          <div>X-Axis Distance: {measurements.xDistance.toFixed(2)}</div>
-          <div>Y-Axis Distance: {measurements.yDistance.toFixed(3)}</div>
-          <div>Y-Axis Max: {measurements.yMax.toFixed(3)}</div>
-          <div>Y-Axis Min: {measurements.yMin.toFixed(3)}</div>
-        </div>
+
+
+
+        
       </div>
     </div>
   );
