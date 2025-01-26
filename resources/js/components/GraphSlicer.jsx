@@ -17,7 +17,7 @@ const InteractiveGraph = () => {
   const [xPointers, setXPointers] = useState([20, 60]);
   const [yPointers, setYPointers] = useState([0.06, 0.12]);
 
-  const [chartSize, setChartSize] = useState({ width: window.innerWidth, height: window.innerHeight * 0.7 }); // 初期サイズ
+  
   const [measurements, setMeasurements] = useState({
     xDistance: 0,
     yDistance: 0,
@@ -37,7 +37,10 @@ const InteractiveGraph = () => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target.result;
-      const parsed = text.split('\n')
+      const lines = text.split('\n');
+      
+      // 1行目をスキップしてデータをパース
+      const parsed = lines.slice(1)
         .filter(line => line.trim())
         .map(line => {
           const [x, y] = line.split(',');
@@ -52,8 +55,13 @@ const InteractiveGraph = () => {
       const xValues = parsed.map(point => point.x);
       const xMin = Math.min(...xValues);
       const xMax = Math.max(...xValues);
+      console.log('xMin:', xMin, 'xMax:', xMax); // デバッグ用ログ
       setXAxisDomain([xMin, xMax]);
-      setXPointers([xMin + (xMax - xMin) * 0.3, xMin + (xMax - xMin) * 0.7]);
+
+      // ポインターの設定
+      const newXPointers = [xMin + (xMax - xMin) * 0.3, xMin + (xMax - xMin) * 0.7];
+      console.log('New xPointers:', newXPointers); // デバッグ用ログ
+      setXPointers(newXPointers);
     };
     reader.readAsText(file);
   };
@@ -130,7 +138,7 @@ const InteractiveGraph = () => {
       if (relevantData.length > 0) {
         const yValues = relevantData.map(point => point.y);
         yMax = Math.max(...yValues);
-        yMin = Math.min(...yValues);
+        yMin = Math.min(...yValues);    
       }
     }
 
@@ -148,170 +156,220 @@ const InteractiveGraph = () => {
     setDraggingPointer({ type, index });
   };
 
+  // 追加: xPointersの変更を監視
+  useEffect(() => {
+    console.log('Updated xPointers:', xPointers); // デバッグ用ログ
+  }, [xPointers]);
+
   return (
     <div className="w-full max-w-4xl p-4 border rounded-lg shadow-lg">
-      <div className="mb-4">
-        <h2 className="text-xl font-bold">Graph Slicer</h2>
-      </div>
-        <div className="space-y-4">
+      
+      <div className="space-y-4">
+        <div>
+          <input
+            type="file"
+            accept=".csv"
+            onChange={handleFileUpload}
+            className="mb-4"
+          />
+        </div>
+        
+        <div className="flex gap-4 mb-4">
           <div>
+            <label className="block text-sm">X-Axis Min:</label>
             <input
-              type="file"
-              accept=".csv"
-              onChange={handleFileUpload}
-              className="mb-4"
+              type="number"
+              value={xAxisDomain[0]}
+              onChange={(e) => handleXAxisChange(e.target.value, xAxisDomain[1])}
+              step="1"
+              className="border p-1 rounded"
             />
           </div>
-          
-          <div className="flex gap-4 mb-4">
-            <div>
-              <label className="block text-sm">X軸最小値:</label>
-              <input
-                type="number"
-                value={xAxisDomain[0]}
-                onChange={(e) => handleXAxisChange(e.target.value, xAxisDomain[1])}
-                step="1"
-                className="border p-1 rounded"
-              />
-            </div>
-            <div>
-              <label className="block text-sm">X軸最大値:</label>
-              <input
-                type="number"
-                value={xAxisDomain[1]}
-                onChange={(e) => handleXAxisChange(xAxisDomain[0], e.target.value)}
-                step="1"
-                className="border p-1 rounded"
-              />
-            </div>
-            <div>
-              <label className="block text-sm">Y軸最小値:</label>
-              <input
-                type="number"
-                value={yAxisDomain[0]}
-                onChange={(e) => handleYAxisChange(e.target.value, yAxisDomain[1])}
-                step="0.01"
-                className="border p-1 rounded"
-              />
-            </div>
-            <div>
-              <label className="block text-sm">Y軸最大値:</label>
-              <input
-                type="number"
-                value={yAxisDomain[1]}
-                onChange={(e) => handleYAxisChange(yAxisDomain[0], e.target.value)}
-                step="0.01"
-                className="border p-1 rounded"
-              />
-            </div>
+          <div>
+            <label className="block text-sm">X-Axis Max:</label>
+            <input
+              type="number"
+              value={xAxisDomain[1]}
+              onChange={(e) => handleXAxisChange(xAxisDomain[0], e.target.value)}
+              step="1"
+              className="border p-1 rounded"
+            />
           </div>
-
-          <div 
-            ref={chartContainerRef}
-            className="relative cursor-crosshair"
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-          >
-            <LineChart
-              width={chartWidth}
-              height={chartHeight}
-              data={data}
-              margin={chartMargin}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="x" 
-                type="number" 
-                domain={xAxisDomain}
-                stroke="#000"
-                strokeWidth={2}
-              />
-              <YAxis 
-                domain={yAxisDomain}
-                stroke="#000"
-                strokeWidth={2}
-              />
-              
-              <Tooltip />
-              <Line type="monotone" dataKey="y" stroke="#8884d8" dot={false} />
-              
-              
-              {/* X軸参照線 */}
-              {xPointers.map((x, i) => (
-                <ReferenceLine 
-                  key={`x-ref-${i}`}
-                  x={x}
-                  stroke="#0066cc"
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  style={{ cursor: 'col-resize', opacity: 0.6 }}
-                  onClick={(e) => handleReferenceLineClick(e, 'x', i)}
-                />
-              ))}
-              
-              {/* Y軸参照線 */}
-              {yPointers.map((y, i) => (
-                <ReferenceLine 
-                  key={`y-ref-${i}`}
-                  y={y}
-                  stroke="#cc0000"
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  style={{ cursor: 'row-resize', opacity: 0.6 }}
-                  onClick={(e) => handleReferenceLineClick(e, 'y', i)}
-                />
-              ))}
-            </LineChart>
+          <div>
+            <label className="block text-sm">Y-Axis Min:</label>
+            <input
+              type="number"
+              value={yAxisDomain[0]}
+              onChange={(e) => handleYAxisChange(e.target.value, yAxisDomain[1])}
+              step="0.01"
+              className="border p-1 rounded"
+            />
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <h3 className="font-bold mb-2">X軸ポインター</h3>
-              {xPointers.map((val, i) => (
-                <div key={`x-${i}`} className="mb-2">
-                  <input
-                    type="number"
-                    step="0.5" 
-                    value={val} // 数値そのまま渡す
-                    onChange={(e) => {
-                      const newXPointers = [...xPointers];
-                      newXPointers[i] = parseFloat(e.target.value);
-                      setXPointers(newXPointers);
-                    }}
-                    className="border p-1 rounded"
-                  />
-                </div>
-              ))}
-            </div>
-            <div>
-              <h3 className="font-bold mb-2">Y軸ポインター</h3>
-              {yPointers.map((val, i) => (
-                <div key={`y-${i}`} className="mb-2">
-                  <input
-                    type="number"
-                    step="0.001" // 小数点第3位までの入力を許可
-                    value={val} // 数値そのまま渡す
-                    onChange={(e) => {
-                      const newYPointers = [...yPointers];
-                      newYPointers[i] = parseFloat(e.target.value);
-                      setYPointers(newYPointers);
-                    }}
-                    className="border p-1 rounded"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-4 p-4 bg-gray-50 rounded">
-            <h3 className="font-bold mb-2">測定結果</h3>
-            <div>X軸距離: {measurements.xDistance.toFixed(2)}</div>
-            <div>Y軸距離: {measurements.yDistance.toFixed(3)}</div>
-            <div>Y値最大: {measurements.yMax.toFixed(3)}</div>
-            <div>Y値最小: {measurements.yMin.toFixed(3)}</div>
+          <div>
+            <label className="block text-sm">Y-Axis Max:</label>
+            <input
+              type="number"
+              value={yAxisDomain[1]}
+              onChange={(e) => handleYAxisChange(yAxisDomain[0], e.target.value)}
+              step="0.01"
+              className="border p-1 rounded"
+            />
           </div>
         </div>
+
+        <div 
+          ref={chartContainerRef}
+          className="relative cursor-crosshair"
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
+          <LineChart
+            width={chartWidth}
+            height={chartHeight}
+            data={data}
+            margin={chartMargin}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis 
+              dataKey="x" 
+              type="number" 
+              domain={xAxisDomain}
+              stroke="#000"
+              strokeWidth={2}
+            />
+            <YAxis 
+              domain={yAxisDomain}
+              stroke="#000"
+              strokeWidth={2}
+            />
+            
+            <Tooltip />
+            <Line type="monotone" dataKey="y" stroke="#8884d8" dot={false} />
+            
+            {/* X軸参照線 */}
+            {xPointers.map((x, i) => (
+              <ReferenceLine 
+                key={`x-ref-${i}`}
+                x={x}
+                stroke="#0066cc"
+                strokeWidth={2}
+                strokeDasharray="5 5"
+                style={{ cursor: 'col-resize', opacity: 0.6 }}
+                onClick={(e) => handleReferenceLineClick(e, 'x', i)}
+              />
+            ))}
+            
+            {/* Y軸参照線 */}
+            {yPointers.map((y, i) => (
+              <ReferenceLine 
+                key={`y-ref-${i}`}
+                y={y}
+                stroke="#cc0000"
+                strokeWidth={2}
+                strokeDasharray="5 5"
+                style={{ cursor: 'row-resize', opacity: 0.6 }}
+                onClick={(e) => handleReferenceLineClick(e, 'y', i)}
+              />
+            ))}
+          </LineChart>
+        </div>
+
+        {/* X軸参照線を動かすスライダー */}
+        <div className="mt-4 flex justify-center" style={{ width: chartWidth }}>
+          <h3 className="font-bold mb-2">X-Axis Slicer</h3>
+          {xPointers.map((val, i) => (
+            <div key={`slider-x-${i}`} className="mb-2" style={{ width: '30%' }}>
+              <input
+                type="range"
+                min={xAxisDomain[0]}
+                max={xAxisDomain[1]}
+                value={val}
+                step="0.1"
+                onChange={(e) => {
+                  const newXPointers = [...xPointers];
+                  newXPointers[i] = parseFloat(e.target.value);
+                  setXPointers(newXPointers);
+                }}
+                className="w-full"
+                style={{
+                  appearance: 'none',
+                  width: '100%',
+                  height: '4px',
+                  background: '#ccc', // トラックの色を灰色に設定
+                  outline: 'none',
+                  opacity: '0.7',
+                  transition: 'opacity .15s ease-in-out',
+                }}
+              />
+              <style jsx>{`
+                input[type='range']::-webkit-slider-thumb {
+                  appearance: none;
+                  width: 16px;
+                  height: 16px;
+                  background: #0066cc; // スライダーのつまみの色を青に設定
+                  cursor: pointer;
+                  border-radius: 50%;
+                }
+                input[type='range']::-moz-range-thumb {
+                  width: 16px;
+                  height: 16px;
+                  background: #0066cc; // スライダーのつまみの色を青に設定
+                  cursor: pointer;
+                  border-radius: 50%;
+                }
+              `}</style>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <h3 className="font-bold mb-2">X-Range</h3>
+            {xPointers.map((val, i) => (
+              <div key={`x-${i}`} className="mb-2">
+                <input
+                  type="number"
+                  step="0.1" 
+                  value={val} // 数値そのまま渡す
+                  onChange={(e) => {
+                    const newXPointers = [...xPointers];
+                    newXPointers[i] = parseFloat(e.target.value);
+                    setXPointers(newXPointers);
+                  }}
+                  className="border p-1 rounded"
+                />
+              </div>
+            ))}
+          </div>
+          <div>
+            <h3 className="font-bold mb-2">Y-Range</h3>
+            {yPointers.map((val, i) => (
+              <div key={`y-${i}`} className="mb-2">
+                <input
+                  type="number"
+                  step="0.001" // 小数点第3位までの入力を許可
+                  value={val} // 数値そのまま渡す
+                  onChange={(e) => {
+                    const newYPointers = [...yPointers];
+                    newYPointers[i] = parseFloat(e.target.value);
+                    setYPointers(newYPointers);
+                  }}
+                  className="border p-1 rounded"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-4 p-4 bg-gray-50 rounded">
+          <h3 className="font-bold mb-2">Measurements</h3>
+          <div>X-Axis Distance: {measurements.xDistance.toFixed(2)}</div>
+          <div>Y-Axis Distance: {measurements.yDistance.toFixed(3)}</div>
+          <div>Y-Axis Max: {measurements.yMax.toFixed(3)}</div>
+          <div>Y-Axis Min: {measurements.yMin.toFixed(3)}</div>
+        </div>
+      </div>
     </div>
   );
 };

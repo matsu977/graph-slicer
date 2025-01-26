@@ -1,3 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+header {
+    background-color: #1e3a8a; /* 青色 */
+    color: white;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+footer {
+    background-color: #1f2937; /* グレー色 */
+    color: white;
+    padding: 1rem;
+    text-align: center;
+}
