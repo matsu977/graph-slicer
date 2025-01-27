@@ -42,27 +42,25 @@ const InteractiveGraph = () => {
       const text = e.target.result;
       const lines = text.split('\n');
       
-      // ヘッダー行を処理
-      const headers = lines[0].split(',').map(header => header.trim());
-      setHeaders(headers);
-      
-      // データを処理
-      const parsed = lines.slice(1)
+      const parsed = lines.slice(2)
         .filter(line => line.trim())
         .map(line => {
-          const values = line.split(',').map(val => parseFloat(val.trim()));
-          return values.reduce((obj, val, index) => {
-            obj[`col${index}`] = val;
-            return obj;
-          }, {});
+          const values = line.split(',');
+          return {
+            col1: parseFloat(values[1] || '0'), // B列
+            col2: parseFloat(values[2] || '0')  // C列
+          };
         });
       setData(parsed);
 
-      // 軸の範囲を設定
-      const xValues = parsed.map(point => point[`col${selectedXColumn}`]);
+      // 軸の範囲を設定（B列のデータ）
+      const xValues = parsed.map(point => point.col1);
       const xMin = Math.min(...xValues);
       const xMax = Math.max(...xValues);
       setXAxisDomain([xMin, xMax]);
+
+      // Y軸の範囲を固定値に設定
+      setYAxisDomain([0, 0.2]);  // ここで明示的に0から0.2に設定
 
       // ポインターの設定
       const newXPointers = [xMin + (xMax - xMin) * 0.3, xMin + (xMax - xMin) * 0.7];
@@ -76,33 +74,39 @@ const InteractiveGraph = () => {
     const columnIndex = parseInt(value);
     if (axis === 'x') {
       setSelectedXColumn(columnIndex);
-    } else {
-      setSelectedYColumn(columnIndex);
-    }
-
-    // 選択された列に基づいてデータの範囲を更新
-    if (data.length > 0) {
-      const values = data.map(point => point[`col${columnIndex}`]);
-      const min = Math.min(...values);
-      const max = Math.max(...values);
-      
-      if (axis === 'x') {
+      // X軸の範囲のみ更新
+      if (data.length > 0) {
+        const values = data.map(point => point[`col${columnIndex}`]);
+        const min = Math.min(...values);
+        const max = Math.max(...values);
         setXAxisDomain([min, max]);
         setXPointers([min + (max - min) * 0.3, min + (max - min) * 0.7]);
-      } else {
-        setYAxisDomain([min, max]);
       }
+    } else {
+      setSelectedYColumn(columnIndex);
+      // Y軸は固定値を維持
+      setYAxisDomain([0, 0.2]);
     }
   };
 
-  // Y軸の範囲設定
+  // Y軸の範囲設定（手動での変更用）
   const handleYAxisChange = (min, max) => {
-    setYAxisDomain([parseFloat(min), parseFloat(max)]);
+    const newMin = parseFloat(min);
+    const newMax = parseFloat(max);
+    if (!isNaN(newMin) && !isNaN(newMax) && newMin < newMax) {
+      setYAxisDomain([newMin, newMax]);
+    }
   };
 
   // X軸の範囲設定
   const handleXAxisChange = (min, max) => {
-    setXAxisDomain([parseFloat(min), parseFloat(max)]);
+    const newMin = parseFloat(min);
+    const newMax = parseFloat(max);
+    // 大小チェックをなくす or マイルドにする
+    if (!isNaN(newMin) && !isNaN(newMax)) {
+      // newMin > newMax なら X 軸が反転表示されるが、とりあえず設定
+      setXAxisDomain([newMin, newMax]);
+    }
   };
 
   // マウス位置をグラフ座標に変換
@@ -295,14 +299,17 @@ const InteractiveGraph = () => {
           >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
-              dataKey={`col${selectedXColumn}`} 
+              dataKey="col1"
               type="number" 
               domain={xAxisDomain}
+              allowDataOverflow={true} // データが範囲外にはみ出した場合にも表示
               stroke="#000"
               strokeWidth={2}
             />
             <YAxis 
-              domain={yAxisDomain}
+              type="number"
+              domain={yAxisDomain}  // 直接値を指定せず、stateを使用
+              allowDataOverflow={true} // データが範囲外にはみ出した場合にも表示
               stroke="#000"
               strokeWidth={2}
             />
@@ -310,7 +317,7 @@ const InteractiveGraph = () => {
             <Tooltip />
             <Line 
               type="monotone" 
-              dataKey={`col${selectedYColumn}`} 
+              dataKey="col2"
               stroke="#8884d8" 
               dot={false} 
             />
