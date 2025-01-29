@@ -229,19 +229,7 @@ const InteractiveGraph = () => {
               className="hidden"
             />
             <div className="px-4 py-3 bg-white border-2 border-blue-200 hover:border-blue-400 rounded-lg cursor-pointer transition-colors duration-200 flex items-center justify-center gap-2 group">
-              <svg
-                className="w-5 h-5 text-blue-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
+              
               <span className="text-sm font-medium text-gray-600 group-hover:text-gray-800">
                 Upload CSV File
               </span>
