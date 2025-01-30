@@ -13,8 +13,8 @@ import {
 const InteractiveGraph = () => {
   const [data, setData] = useState([]);
   const [headers, setHeaders] = useState([]); // CSVのヘッダー行を保存
-  const [selectedXColumn, setSelectedXColumn] = useState(0); // X軸として選択された列のインデックス
-  const [selectedYColumn, setSelectedYColumn] = useState(1); // Y軸として選択された列のインデックス
+  const [selectedXColumn, setSelectedXColumn] = useState(1); // X軸として選択された列のインデックス
+  const [selectedYColumn, setSelectedYColumn] = useState(2); // Y軸として選択された列のインデックス
 
   // 表示用の文字列 state
   const [xAxisMinInput, setXAxisMinInput] = useState("");
@@ -211,13 +211,30 @@ const InteractiveGraph = () => {
     setDraggingPointer({ type, index });
   };
 
+  const CustomTooltip = ({ active, payload, label }) => {
+    // active: ホバー中かどうか
+    // payload: [{ name: "col2", value: データ値 }, ... ] のように配列で来る
+    // label: X 軸の値 (例: “3.00”)
+  
+    if (!active || !payload || !payload.length) {
+      return null; // マウスホバーが外れたときは表示しない
+    }
+  
+    return (
+      <div style={{ backgroundColor: "#ffffff", border: "1px solid #cccccc", padding: "8px" }}>
+        <p style={{ margin: 0 }}>X: {label}</p>
+        <p style={{ margin: 0 }}>Y: {payload[0].value}</p>
+      </div>
+    );
+  };
+
   // 追加: xPointersの変更を監視
   useEffect(() => {
     console.log('Updated xPointers:', xPointers); // デバッグ用ログ
   }, [xPointers]);
 
   return (
-    <div className="w-full max-w-4xl p-4 border rounded-lg shadow-lg">
+    <div className="w-full max-w-4xl p-4 border rounded-lg shadow-lg mx-auto">
       
       <div className="space-y-4">
         <div className="mb-6">
@@ -239,7 +256,7 @@ const InteractiveGraph = () => {
         
         {/* 列選択のドロップダウンを追加 */}
         {headers.length > 0 && (
-          <div className="flex gap-4 mb-4">
+          <div className="flex gap-4 mb-4 justify-center">
             <div>
               <label className="block text-sm">X軸の列:</label>
               <select
@@ -272,7 +289,7 @@ const InteractiveGraph = () => {
         )}
 
         <div className="max-w-3xl mx-auto">
-          <div className="flex gap-4 mb-4">
+          <div className="flex gap-4 mb-4 justify-center">
             <div>
               <label className="block text-sm">X-Axis Min:</label>
               <input
@@ -319,75 +336,75 @@ const InteractiveGraph = () => {
               />
             </div>
           </div>
-
-          <div 
-            ref={chartContainerRef}
-            className="relative cursor-crosshair"
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-          >
-            <LineChart
-              width={chartWidth}
-              height={chartHeight}
-              data={data}
-              margin={chartMargin}
+          <div className="flex justify-center">
+            <div 
+              ref={chartContainerRef}
+              className="relative cursor-crosshair"
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
             >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="col1"
-                type="number" 
-                domain={xAxisDomain}
-                allowDataOverflow={true} // データが範囲外にはみ出した場合にも表示
-                stroke="#000"
-                strokeWidth={2}
-              />
-              <YAxis 
-                type="number"
-                domain={yAxisDomain}  // 直接値を指定せず、stateを使用
-                allowDataOverflow={true} // データが範囲外にはみ出した場合にも表示
-                stroke="#000"
-                strokeWidth={2}
-              />
-              
-              <Tooltip />
-              <Line 
-                type="monotone" 
-                dataKey="col2"
-                stroke="#8884d8" 
-                dot={false} 
-              />
-              
-              {/* X軸参照線 */}
-              {xPointers.map((x, i) => (
-                <ReferenceLine 
-                  key={`x-ref-${i}`}
-                  x={x}
-                  stroke="#0066cc"
+              <LineChart
+                width={chartWidth}
+                height={chartHeight}
+                data={data}
+                margin={chartMargin}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="col1"
+                  type="number" 
+                  domain={xAxisDomain}
+                  allowDataOverflow={true} // データが範囲外にはみ出した場合にも表示
+                  stroke="#000"
                   strokeWidth={2}
-                  strokeDasharray="5 5"
-                  style={{ cursor: 'col-resize', opacity: 0.6 }}
-                  onClick={(e) => handleReferenceLineClick(e, 'x', i)}
                 />
-              ))}
-              
-              {/* Y軸参照線 */}
-              {yPointers.map((y, i) => (
-                <ReferenceLine 
-                  key={`y-ref-${i}`}
-                  y={y}
-                  stroke="#cc0000"
+                <YAxis 
+                  type="number"
+                  domain={yAxisDomain}  // 直接値を指定せず、stateを使用
+                  allowDataOverflow={true} // データが範囲外にはみ出した場合にも表示
+                  stroke="#000"
                   strokeWidth={2}
-                  strokeDasharray="5 5"
-                  style={{ cursor: 'row-resize', opacity: 0.6 }}
-                  onClick={(e) => handleReferenceLineClick(e, 'y', i)}
                 />
-              ))}
-            </LineChart>
+                
+                <Tooltip content={<CustomTooltip />}/>
+                <Line 
+                  type="monotone" 
+                  dataKey="col2"
+                  stroke="#8884d8" 
+                  dot={false} 
+                />
+                
+                {/* X軸参照線 */}
+                {xPointers.map((x, i) => (
+                  <ReferenceLine 
+                    key={`x-ref-${i}`}
+                    x={x}
+                    stroke="#0066cc"
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    style={{ cursor: 'col-resize', opacity: 0.6 }}
+                    onClick={(e) => handleReferenceLineClick(e, 'x', i)}
+                  />
+                ))}
+                
+                {/* Y軸参照線 */}
+                {yPointers.map((y, i) => (
+                  <ReferenceLine 
+                    key={`y-ref-${i}`}
+                    y={y}
+                    stroke="#cc0000"
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    style={{ cursor: 'row-resize', opacity: 0.6 }}
+                    onClick={(e) => handleReferenceLineClick(e, 'y', i)}
+                  />
+                ))}
+              </LineChart>
+            </div>
           </div>
-
           {/* X軸参照線を動かすスライダー */}
-          <div className="mt-4 flex justify-center" style={{ width: chartWidth }}>
+          <div className="mt-4 flex justify-center mx-auto" style={{ width: chartWidth }}>
             <h3 className="font-bold mb-2">X-Axis Slicer</h3>
             {xPointers.map((val, i) => (
               <div key={`slider-x-${i}`} className="mb-2" style={{ width: '30%' }}>
@@ -434,7 +451,7 @@ const InteractiveGraph = () => {
             ))}
           </div>
 
-          <div className="flex gap-8 p-4 justify-start">
+          <div className="flex gap-8 p-4 justify-center">
             {/* X-Range: 左寄せ */}
             <div className="w-48 border p-4 rounded space-y-4">
               <h3 className="font-bold mb-4">X-Range</h3>
@@ -476,18 +493,40 @@ const InteractiveGraph = () => {
             </div>
 
             {/* Measurements: Y-Range の右 */}
-            <div className="w-96 border p-4 rounded space-y-4 bg-gradient-to-br from-blue-100 via-white to-blue-50 shadow-lg">
-              <h3 className="font-bold mb-4">Measurements</h3>
-                <div className="flex gap-8 p-4 justify-start">
-                  <div className="w-48">
-                    <div>X-Axis Distance: {measurements.xDistance.toFixed(2)}</div>
-                    <div>Y-Axis Distance: {measurements.yDistance.toFixed(3)}</div>
-                  </div>
-                  <div className="w-48">
-                    <div>Y-Axis Max: {measurements.yMax.toFixed(3)}</div>
-                    <div>Y-Axis Min: {measurements.yMin.toFixed(3)}</div>
+            <div className="w-[1000px] rounded-lg bg-white shadow-md border border-gray-100">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-t-lg border-b">
+                <h3 className="text-xl font-medium text-gray-800">Measurements</h3>
+              </div>
+              
+              <div className="flex justify-center p-6 space-x-8">
+                <div className="px-2 text-center rounded-lg">
+                  <div className="inline-block text-gray-500 text-base mb-2">X Distance</div>
+                  <div className="text-4xl font-bold text-indigo-600">
+                    {measurements.xDistance.toFixed(2)}
                   </div>
                 </div>
+                
+                <div className="px-2 text-center  rounded-lg">
+                  <div className="inline-block text-gray-500 text-base mb-2">Y Distance</div>
+                  <div className="text-4xl font-bold text-indigo-600">
+                    {measurements.yDistance.toFixed(3)}
+                  </div>
+                </div>
+                
+                <div className="px-2 text-center rounded-lg">
+                  <div className="inline-block text-gray-500 text-base mb-2">Maximum</div>
+                  <div className="text-4xl font-bold text-indigo-600">
+                    {measurements.yMax.toFixed(3)}
+                  </div>
+                </div>
+                
+                <div className="px-2 text-center rounded-lg">
+                  <div className="inline-block text-gray-500 text-base mb-2">Minimum</div>
+                  <div className="text-4xl font-bold text-indigo-600">
+                    {measurements.yMin.toFixed(3)}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

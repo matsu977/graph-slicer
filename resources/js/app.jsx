@@ -2,13 +2,13 @@ import "./bootstrap";
 import "../css/app.css";
 
 import ReactDOM from "react-dom/client";
-import GraphSlicer from "./components/GraphSlicer";
+import InteractiveGraph from "./components/InteractiveGraph";
 
 
 function App() {
     return (
         <div>
-            <GraphSlicer />
+            <InteractiveGraph />
         </div>
     );
 

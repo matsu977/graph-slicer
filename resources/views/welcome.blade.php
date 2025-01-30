@@ -20,7 +20,7 @@
                        </svg>
                    </div>
                    <h1 class="text-3xl font-bold tracking-tight hover:tracking-wide transition-all duration-300">
-                       Graph<span class="text-emerald-200">Slicer</span>
+                   Data<span class="text-emerald-200">Slicer</span>
                    </h1>
                </div>
                <nav class="hidden md:flex space-x-6 text-emerald-50">
@@ -38,7 +38,7 @@
        <footer class="bg-gradient-to-r from-emerald-600 to-teal-500 text-white py-8 px-6">
            <div class="container mx-auto">
                <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-                   <p class="text-emerald-100">&copy; 2025 GraphSlicer. All rights reserved.</p>
+                   <p class="text-emerald-100">&copy; 2025 DataSlicer. All rights reserved.</p>
                    <div class="flex space-x-6">
                        <a href="#" class="text-emerald-100 hover:text-white transition-colors">Privacy Policy</a>
                        <a href="#" class="text-emerald-100 hover:text-white transition-colors">Terms of Service</a>
